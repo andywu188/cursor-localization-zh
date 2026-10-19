@@ -35,8 +35,8 @@
         return changed ? result : null;
     }
 
-    // 先查精确词典，未命中再按正则整句翻译
-    function ChaZhao_FanYi(text) {
+    // 先查精确词典，未命中再按正则整句翻译。jinQue 为真时不走正则
+    function ChaZhao_FanYi(text, jinQue) {
         if (!text) return null;
 
         var trimmed = text.trim();
@@ -47,6 +47,7 @@
         if (normalized !== trimmed && FanYi_CiDian.has(normalized)) return FanYi_CiDian.get(normalized);
         if (quoteNorm !== normalized && FanYi_CiDian.has(quoteNorm)) return FanYi_CiDian.get(quoteNorm);
 
+        if (jinQue) return null;
         for (var i = 0; i < MoShi_FanYi.length; i++) {
             var pair = MoShi_FanYi[i];
             if (pair[0].test(trimmed)) return trimmed.replace(pair[0], pair[1]);
@@ -854,7 +855,8 @@
     // 判断文本是否像源代码，避免把代码里的界面原文替换掉
     function Shi_Yuan_DaiMa_WenBen(text) {
         if (!text) return false;
-        if (/[{};]|=>|\breplace\s*\(|\bfunction\b|\b(?:const|let|var|return)\b/.test(text)) return true;
+        if (/=>|\breplace\s*\(|\bfunction\s*[(<{]|\b(?:const|let|var)\s+[A-Za-z_$]|\breturn\s+\S/.test(text)) return true;
+        if (/[{}]/.test(text) && /;/.test(text)) return true;
         // 统计面板不会把 AI-Generated: 这类标签包在引号里，引号里的是源代码字符串
         return /['"`][^'"`\n]{0,120}(?:AI-Generated:|Agent Stats:|Tab Stats:|Total Changes:|Most Recent Commit Scored:)/.test(text) ||
             /(?:AI-Generated:|Agent Stats:|Tab Stats:|Total Changes:|Most Recent Commit Scored:)[^'"`\n]{0,80}['"`]/.test(text);
@@ -1011,7 +1013,8 @@
         try {
             if (node.parentElement && (
                 YingGai_TiaoGuo_BianJiQi_YuanSu(node.parentElement) ||
-                Shi_YongHu_ShuRu_QuYu(node.parentElement)
+                Shi_YongHu_ShuRu_QuYu(node.parentElement) ||
+                Shi_HuiFu_ZhengWen(node.parentElement)
             )) return;
         } catch (e) {}
         var trimmed = (node.textContent || '').trim();
@@ -1029,9 +1032,10 @@
             acceptNode: function(node) {
                 if (node.nodeType === 1) {
                     var cls = node.classList;
-                    if (cls && (cls.contains('monaco-editor') || cls.contains('view-lines') || cls.contains('ProseMirror') || cls.contains('tiptap') || cls.contains('inputarea'))) {
+                    if (cls && (cls.contains('monaco-editor') || cls.contains('view-lines') || cls.contains('ProseMirror') || cls.contains('tiptap') || cls.contains('inputarea') || cls.contains('ui-markdown'))) {
                         return NodeFilter.FILTER_REJECT;
                     }
+                    if (typeof node.className === 'string' && node.className.indexOf('ui-markdown') >= 0) return NodeFilter.FILTER_REJECT;
                     if (node.getAttribute && node.getAttribute('contenteditable') === 'true') return NodeFilter.FILTER_REJECT;
                     return NodeFilter.FILTER_SKIP;
                 }
@@ -1089,7 +1093,18 @@
         if (!text) return;
         var trimmed = text.trim();
         if (!trimmed) return;
-        if (Shi_Yuan_DaiMa_WenBen(text) || Shi_Yuan_DaiMa_WenBen(trimmed)) return;
+        var zaiHuiFu = Shi_HuiFu_ZhengWen(node.parentElement);
+        if (Shi_Yuan_DaiMa_WenBen(text) || Shi_Yuan_DaiMa_WenBen(trimmed)) {
+            if (!zaiHuiFu) {
+                var exactCode = ChaZhao_FanYi(trimmed, true) || ChaZhao_FanYi(text, true);
+                if (exactCode && exactCode !== trimmed) {
+                    var codePrefix = text.substring(0, text.indexOf(trimmed));
+                    var codeSuffix = text.substring(text.indexOf(trimmed) + trimmed.length);
+                    XieRu_WenBen_JieDian(node, codePrefix + exactCode + codeSuffix);
+                }
+            }
+            return;
+        }
         var pingFenWen = /(?:Most Recent Commit Scored|AI-Generated:|Total Changes:)/i.test(trimmed);
         if (trimmed.length > (pingFenWen ? 800 : 500)) return;
         if (/^[\d\s.,;:!?@#$%^&*()\-+=<>\\/|~`'"[\]{}]+$/.test(trimmed)) return;
@@ -1116,11 +1131,11 @@
             return;
         }
 
-        var slashTip = FanYi_XieGang_TiShi(node);
-        var result = slashTip || ChaZhao_FanYi(text);
-        if (!result) result = FanYi_TiJiao_PingFen_WenBen(text) || FanYi_TiJiao_PingFen_WenBen(trimmed);
-        if (!result) result = FanYi_SiKao_BiaoQian(node, trimmed);
-        if (!result) result = FanYi_SiKao_ShiChang(node, trimmed);
+        var slashTip = zaiHuiFu ? null : FanYi_XieGang_TiShi(node);
+        var result = slashTip || ChaZhao_FanYi(text, zaiHuiFu);
+        if (!zaiHuiFu && !result) result = FanYi_TiJiao_PingFen_WenBen(text) || FanYi_TiJiao_PingFen_WenBen(trimmed);
+        if (!zaiHuiFu && !result) result = FanYi_SiKao_BiaoQian(node, trimmed);
+        if (!zaiHuiFu && !result) result = FanYi_SiKao_ShiChang(node, trimmed);
         if (result) {
             var prefix = text.substring(0, text.indexOf(trimmed));
             var suffix = text.substring(text.indexOf(trimmed) + trimmed.length);
@@ -1137,6 +1152,7 @@
             }
         }
 
+        if (zaiHuiFu) return;
         var partial = TiHuan_BuFen_WenBen(text);
         if (partial) XieRu_WenBen_JieDian(node, partial);
     }
@@ -1453,11 +1469,19 @@
         try {
             if (el.closest(
                 '.monaco-editor .view-lines, .monaco-editor .view-line, .view-overlays, ' +
-                '.margin-view-overlays, .overflow-guard, .inputarea, .monaco-mouse-cursor-text, ' +
+                '.margin-view-overlays, .inputarea, .monaco-mouse-cursor-text, ' +
                 '.ProseMirror, .tiptap, .ui-prompt-input-editor'
             )) return true;
         } catch (e) {}
         return false;
+    }
+
+    // 判断元素是否位于模型回复正文。工具状态行不在这段里
+    function Shi_HuiFu_ZhengWen(el) {
+        if (!el || !el.closest) return false;
+        try {
+            return !!(el.closest('.ui-markdown, [class*="ui-markdown"]'));
+        } catch (e) { return false; }
     }
 
     // 判断元素是否位于对话输入条
@@ -1533,6 +1557,8 @@
                     cls.indexOf('sticky-widget') !== -1 ||
                     cls.indexOf('code-line') !== -1 ||
                     cls.indexOf('code-view') !== -1 ||
+                    cls.indexOf('code-content') !== -1 ||
+                    cls.indexOf('composer-message-codeblock') !== -1 ||
                     cls.indexOf('simple-code-render') !== -1 ||
                     /(?:^|\s)mtk\d*(?:\s|$)/.test(cls)
                 )) return true;
@@ -1615,7 +1641,12 @@
     function Shi_XuanQu_GongJu_WenBen(node) {
         if (!node || !node.parentElement) return false;
         try {
-            if (node.parentElement.closest('.view-lines, .inputarea, textarea, [contenteditable="true"]')) return false;
+            if (node.parentElement.closest(
+                '.view-lines, .inputarea, textarea, [contenteditable="true"], ' +
+                '.code-content, .code-line, .code-view, pre, code, .cm-content, .ui-code-block, ' +
+                '.composer-message-codeblock'
+            )) return false;
+            if (!node.parentElement.closest('.cursorHoverWidget, .hoverButton')) return false;
         } catch (e) { return false; }
         var text = (node.textContent || '').trim();
         for (var i = 0; i < XuanQu_GongJu_BiaoQian.length; i++) {
@@ -1649,7 +1680,10 @@
             if (node.nodeType === Node.ELEMENT_NODE) {
                 if (TiaoGuo_BiaoQian.has(node.tagName)) continue;
                 if (YingGai_TiaoGuo_FanYi_ZiShu_YuanSu(node)) {
-                    if (!(node.classList && (node.classList.contains('monaco-editor') || node.classList.contains('view-lines') || node.classList.contains('inputarea'))) &&
+                    var zaiXuanQuTiao = false;
+                    try { zaiXuanQuTiao = !!(node.closest && node.closest('.cursorHoverWidget, .hoverButton')); } catch (e) {}
+                    if (zaiXuanQuTiao &&
+                        !(node.classList && (node.classList.contains('monaco-editor') || node.classList.contains('view-lines') || node.classList.contains('inputarea'))) &&
                         node.childNodes && node.childNodes.length <= 8) {
                         var sample = '';
                         for (var s = 0; s < node.childNodes.length && sample.length < 180; s++) {
@@ -2922,7 +2956,7 @@
         var nodes = document.querySelectorAll('strong, span');
         for (var i = 0; i < nodes.length; i++) {
             var el = nodes[i];
-            if (Shi_Zai_DaiMa_Hang(el)) continue;
+            if (Shi_Zai_DaiMa_Hang(el) || Shi_YongHu_ShuRu_QuYu(el)) continue;
             var text = (el.textContent || '').trim();
             var tr = SheJi_TiShi_AnJian[text];
             if (!tr || el.childElementCount > 0) continue;
