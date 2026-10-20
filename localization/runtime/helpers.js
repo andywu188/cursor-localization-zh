@@ -25,6 +25,7 @@
     function GengXin_WenBen_YeZi_Hints(el, hints, opts) {
         if (!el || (typeof TiaoGuo_XuanZeQi === 'string' && el.closest(TiaoGuo_XuanZeQi))) return;
         if (typeof Shi_KongZhuangTai_TiShi === 'function' && Shi_KongZhuangTai_TiShi(el)) return;
+        if (typeof Shi_HuiFu_ZhengWen === 'function' && Shi_HuiFu_ZhengWen(el)) return;
         if (typeof Shi_BianJiQi_QuYu === 'function' && Shi_BianJiQi_QuYu(el)) return;
         if (typeof Shi_YongHu_ShuRu_QuYu === 'function' && Shi_YongHu_ShuRu_QuYu(el)) return;
         opts = opts || {};
@@ -112,6 +113,7 @@
             var el = roots[r];
             if (!el) continue;
             if (el.closest('.monaco-editor .view-lines')) continue;
+            if (typeof Shi_HuiFu_ZhengWen === 'function' && Shi_HuiFu_ZhengWen(el)) continue;
             if (typeof Shi_YongHu_ShuRu_QuYu === 'function' && Shi_YongHu_ShuRu_QuYu(el)) continue;
             if (opts.skipEditor && el.closest('.monaco-editor')) continue;
             FanYi_ShuXing(el);

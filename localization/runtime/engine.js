@@ -1089,19 +1089,19 @@
     function FanYi_WenBen_JieDian(node) {
         if (Shi_Zai_DaiMa_Hang(node)) return;
         if (Shi_KongZhuangTai_TiShi(node)) return;
+        try {
+            if (node.parentElement && Shi_HuiFu_ZhengWen(node.parentElement)) return;
+        } catch (e) {}
         var text = node.textContent;
         if (!text) return;
         var trimmed = text.trim();
         if (!trimmed) return;
-        var zaiHuiFu = Shi_HuiFu_ZhengWen(node.parentElement);
         if (Shi_Yuan_DaiMa_WenBen(text) || Shi_Yuan_DaiMa_WenBen(trimmed)) {
-            if (!zaiHuiFu) {
-                var exactCode = ChaZhao_FanYi(trimmed, true) || ChaZhao_FanYi(text, true);
-                if (exactCode && exactCode !== trimmed) {
-                    var codePrefix = text.substring(0, text.indexOf(trimmed));
-                    var codeSuffix = text.substring(text.indexOf(trimmed) + trimmed.length);
-                    XieRu_WenBen_JieDian(node, codePrefix + exactCode + codeSuffix);
-                }
+            var exactCode = ChaZhao_FanYi(trimmed, true) || ChaZhao_FanYi(text, true);
+            if (exactCode && exactCode !== trimmed) {
+                var codePrefix = text.substring(0, text.indexOf(trimmed));
+                var codeSuffix = text.substring(text.indexOf(trimmed) + trimmed.length);
+                XieRu_WenBen_JieDian(node, codePrefix + exactCode + codeSuffix);
             }
             return;
         }
@@ -1131,11 +1131,11 @@
             return;
         }
 
-        var slashTip = zaiHuiFu ? null : FanYi_XieGang_TiShi(node);
-        var result = slashTip || ChaZhao_FanYi(text, zaiHuiFu);
-        if (!zaiHuiFu && !result) result = FanYi_TiJiao_PingFen_WenBen(text) || FanYi_TiJiao_PingFen_WenBen(trimmed);
-        if (!zaiHuiFu && !result) result = FanYi_SiKao_BiaoQian(node, trimmed);
-        if (!zaiHuiFu && !result) result = FanYi_SiKao_ShiChang(node, trimmed);
+        var slashTip = FanYi_XieGang_TiShi(node);
+        var result = slashTip || ChaZhao_FanYi(text);
+        if (!result) result = FanYi_TiJiao_PingFen_WenBen(text) || FanYi_TiJiao_PingFen_WenBen(trimmed);
+        if (!result) result = FanYi_SiKao_BiaoQian(node, trimmed);
+        if (!result) result = FanYi_SiKao_ShiChang(node, trimmed);
         if (result) {
             var prefix = text.substring(0, text.indexOf(trimmed));
             var suffix = text.substring(text.indexOf(trimmed) + trimmed.length);
@@ -1152,7 +1152,6 @@
             }
         }
 
-        if (zaiHuiFu) return;
         var partial = TiHuan_BuFen_WenBen(text);
         if (partial) XieRu_WenBen_JieDian(node, partial);
     }
@@ -1417,7 +1416,7 @@
                     }
                 }
             });
-            hoverObs.observe(document.body, { childList: true, subtree: true });
+            hoverObs.observe(document.body, { childList: true, subtree: true, characterData: true });
         } catch (e) {}
         document.addEventListener('mouseover', function(ev) {
             var target = ev.target;
@@ -1577,10 +1576,13 @@
         return false;
     }
 
-    // 写文本节点。代码行直接拒绝，避免界面词替换进源代码显示
+    // 写文本节点。代码行和回复正文直接拒绝，避免界面词替换进去
     function XieRu_WenBen_JieDian(node, text) {
         if (!node || node.nodeType !== 3 || text == null) return false;
         if (Shi_Zai_DaiMa_Hang(node)) return false;
+        try {
+            if (node.parentElement && Shi_HuiFu_ZhengWen(node.parentElement)) return false;
+        } catch (e) {}
         if (node.nodeValue !== text) node.nodeValue = text;
         return true;
     }
@@ -2140,6 +2142,14 @@
         var huiDiaoQiZhi = 0;
         for (var i = 0; i < mutations.length; i++) {
             var m = mutations[i];
+            // 占位符属性变更必须先于输入/代码过滤。原生 placeholder 赋值不走 setAttribute 补丁
+            if (m.type === 'attributes' && m.target) {
+                var attrName = m.attributeName || '';
+                if (attrName === 'placeholder' || attrName === 'data-placeholder' || attrName === 'aria-placeholder') {
+                    try { FanYi_ZhanWei_ShuXing(m.target); } catch (e) {}
+                    continue;
+                }
+            }
             var kuaiEl = m.target && (m.target.nodeType === 1 ? m.target : m.target.parentElement);
             if (!kongZhuangTai && kuaiEl && kuaiEl.closest && kuaiEl.closest('[data-component="glass-empty-state-rotating-tips"]')) kongZhuangTai = true;
             if (kuaiEl && kuaiEl.className && typeof kuaiEl.className === 'string') {
@@ -2186,8 +2196,15 @@
                 }
             } else if (m.type === 'characterData' && m.target && m.target.nodeType === Node.TEXT_NODE) {
                 try { FanYi_ZhuangTai_WenBen_JieDian(m.target); } catch (e) {}
-            } else if (m.type === 'attributes' && m.target) {
-                try { FanYi_ZhanWei_ShuXing(m.target); } catch (e) {}
+                try {
+                    var cdEl = m.target.parentElement;
+                    if (cdEl && cdEl.closest && cdEl.closest(
+                        '.context-view, .monaco-select-box, .quick-input-widget, [role="listbox"], ' +
+                        '.monaco-hover, .cursorHoverWidget, [role="tooltip"]'
+                    )) {
+                        FanYi_WenBen_JieDian(m.target);
+                    }
+                } catch (e) {}
             }
         }
         if (dingBuCaiDan) {
@@ -2250,22 +2267,64 @@
         }
     }
 
+    // 顶部菜单助记符结构（如 <u>F</u>ile）保留子节点，只改可见文案
+    function XieRu_ZhuJiFu_CaiDan_BiaoQian(el, text) {
+        if (!el || text == null || el.nodeType !== 1) return false;
+        var mnemonic = null;
+        var textNode = null;
+        var child = el.firstChild;
+        while (child) {
+            if (child.nodeType === 1) {
+                var ct = (child.textContent || '').trim();
+                if (ct) {
+                    if (mnemonic || child.children.length || ct.length > 2) return false;
+                    mnemonic = child;
+                }
+            } else if (child.nodeType === 3 && (child.nodeValue || '').trim()) {
+                if (textNode) return false;
+                textNode = child;
+            }
+            child = child.nextSibling;
+        }
+        if (!mnemonic || !textNode) return false;
+        try { mnemonic.textContent = ''; } catch (e) { return false; }
+        var raw = textNode.nodeValue;
+        var trimmed = raw.trim();
+        var idx = raw.indexOf(trimmed);
+        var next = idx < 0 ? text : raw.substring(0, idx) + text + raw.substring(idx + trimmed.length);
+        if (textNode.nodeValue !== next) textNode.nodeValue = next;
+        return true;
+    }
+
     // 只改写已有文本节点，避免拆掉 React 子节点
     function XieRu_YuanSu_WenBen(el, text) {
         if (!el || text == null) return false;
         if (el.nodeType === 3) return XieRu_WenBen_JieDian(el, text);
         if (el.nodeType !== 1) return false;
         if (Shi_Zai_DaiMa_Hang(el)) return false;
+        try { if (Shi_HuiFu_ZhengWen(el)) return false; } catch (e) {}
         var child = el.firstChild;
         var target = null;
+        var youYuanSuWen = false;
         while (child) {
             if (child.nodeType === 1) {
-                if ((child.textContent || '').trim()) return false;
+                if ((child.textContent || '').trim()) youYuanSuWen = true;
             } else if (child.nodeType === 3 && (child.nodeValue || '').trim()) {
                 if (target) return false;
                 target = child;
             }
             child = child.nextSibling;
+        }
+        if (youYuanSuWen) {
+            var shiDingBuBiaoTi = false;
+            try {
+                shiDingBuBiaoTi = !!(el.classList && (
+                    el.classList.contains('menubar-menu-title') ||
+                    el.classList.contains('menubar-menu-button')
+                )) || !!(el.closest && el.closest('.menubar-menu-title, [role="menubar"]'));
+            } catch (e2) {}
+            if (shiDingBuBiaoTi) return XieRu_ZhuJiFu_CaiDan_BiaoQian(el, text);
+            return false;
         }
         if (!target) return false;
         var raw = target.nodeValue;
@@ -2281,6 +2340,7 @@
         if (!el || !text) return false;
         if (text.length > 400) return false;
         if (Shi_YongHu_ShuRu_QuYu(el)) return false;
+        try { if (Shi_HuiFu_ZhengWen(el)) return false; } catch (e) {}
         if (YingGai_TiaoGuo_BianJiQi_YuanSu(el)) return false;
         try {
             if (el.querySelector('input, textarea, select, button, [role="button"], [role="switch"], [contenteditable="true"]')) return false;
@@ -3220,7 +3280,7 @@
                     try { ZhiXing_PromptBar_FanYi(); } catch (e) {}
                 }, 120);
             });
-            obs.observe(document.body, { childList: true, subtree: true });
+            obs.observe(document.body, { childList: true, subtree: true, characterData: true });
         }
     }
 
@@ -4475,7 +4535,7 @@
             }, 70);
         });
         try {
-            obs.observe(root, { childList: true, subtree: true });
+            obs.observe(root, { childList: true, subtree: true, characterData: true });
             window.__cursorSheZhiXiaLaObs = obs;
         } catch (e) {}
     }

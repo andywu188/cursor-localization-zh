@@ -93,7 +93,7 @@
             'Use with caution', 'Skip symlinks', 'cursorignore', 'cursor-settings',
             "Don't Ask Again", 'Hidden Dialogs', 'hidden dialogs'
         ],
-        ZHANG_HU: ['Current Plan', 'Resets on', 'Included Usage', 'Resets', 'Window Restoration', 'Last Used Windows', 'Cursor Models', 'Other Models', 'Default Model', 'Adjust Plan', 'Usage limits reset', 'Search Cursor settings', 'Free', 'Manage', 'CURRENT']
+        ZHANG_HU: ['Current Plan', 'Resets on', 'Included Usage', 'Resets', 'Window Restoration', 'Last Used Windows', 'Cursor Models', 'Other Models', 'Default Model', 'Adjust Plan', 'Usage limits reset', 'Search Cursor settings', 'Free', '免费版', 'Manage', 'CURRENT']
     };
 
     // 按标签查全局关键词表，判断页面是否命中
