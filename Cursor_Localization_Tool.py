@@ -834,6 +834,11 @@ def HuiFu_TuoPan_HanHua():
 SYSTEM_NOTIFICATION_DICTIONARY_FILE = os.path.join(LOCALIZATION_DIR, "System_Notification_Dictionary.json")  # 系统通知原文替换词典
 
 
+def HuoQu_XiTong_TongZhi_ZhuangTai_LuJing():
+    """本机已应用的通知替换表。按 Cursor 版本区分，不进仓库。"""
+    return os.path.join(CURSOR_SHU_JU_LU_JING, "cursor-localization-zh", "system-notification-state.json")
+
+
 def DuQu_XiTong_TongZhi_TiHuan():
     """读取系统通知唯一字符串替换表 [[en, zh], ...]。"""
     if not os.path.isfile(SYSTEM_NOTIFICATION_DICTIONARY_FILE):
@@ -856,20 +861,125 @@ def HuoQu_XiTong_TongZhi_JS_LieBiao():
     ]
 
 
-def _YingYong_XiTong_TongZhi_TiHuan(NeiRong, FanXiang=False):
+def HuoQu_Cursor_ChanPin_XinXi():
+    """读取当前安装的版本与 commit，用来绑定已应用替换表。"""
+    LuJing = os.path.join(HuoQu_App_GenMuLu_LuJing(CURSOR_AN_ZHUANG_LU_JING), "product.json")
+    try:
+        with open(LuJing, "r", encoding="utf-8") as WenJian:
+            ShuJu = json.load(WenJian)
+        return {
+            "version": ShuJu.get("version") or "",
+            "commit": ShuJu.get("commit") or "",
+            "vscodeVersion": ShuJu.get("vscodeVersion") or "",
+        }
+    except (OSError, json.JSONDecodeError):
+        return {"version": "", "commit": "", "vscodeVersion": ""}
+
+
+def JiSuan_WenJian_Sha256(LuJing):
+    """计算文件 SHA-256 十六进制，用于核对工作台脚本是否仍是当时那份。"""
+    with open(LuJing, "rb") as WenJian:
+        return hashlib.sha256(WenJian.read()).hexdigest()
+
+
+def _GuiYi_TongZhi_TiHuan_Biao(YuanShi):
+    JieGuo = []
+    if not YuanShi:
+        return JieGuo
+    for Xiang in YuanShi:
+        if isinstance(Xiang, (list, tuple)) and len(Xiang) >= 2 and Xiang[0] and Xiang[1]:
+            JieGuo.append([str(Xiang[0]), str(Xiang[1])])
+    return JieGuo
+
+
+def DuQu_XiTong_TongZhi_ZhuangTai():
+    """读取上次成功写入工作台脚本的替换表。"""
+    LuJing = HuoQu_XiTong_TongZhi_ZhuangTai_LuJing()
+    if not os.path.isfile(LuJing):
+        return None
+    try:
+        with open(LuJing, "r", encoding="utf-8") as WenJian:
+            ShuJu = json.load(WenJian)
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(ShuJu, dict):
+        return None
+    ShuJu["applied"] = _GuiYi_TongZhi_TiHuan_Biao(ShuJu.get("applied"))
+    return ShuJu
+
+
+def XieRu_XiTong_TongZhi_ZhuangTai(YingYongBiao, WenJianXinXi):
+    """记下本次实际写入的替换表，供再注入和还原使用。"""
+    LuJing = HuoQu_XiTong_TongZhi_ZhuangTai_LuJing()
+    MuLu = os.path.dirname(LuJing)
+    try:
+        os.makedirs(MuLu, exist_ok=True)
+        ChanPin = HuoQu_Cursor_ChanPin_XinXi()
+        ShuJu = {
+            "version": 1,
+            "updatedAt": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "cursorVersion": ChanPin.get("version") or "",
+            "commit": ChanPin.get("commit") or "",
+            "vscodeVersion": ChanPin.get("vscodeVersion") or "",
+            "applied": _GuiYi_TongZhi_TiHuan_Biao(YingYongBiao),
+            "files": WenJianXinXi,
+        }
+        with open(LuJing, "w", encoding="utf-8") as WenJian:
+            json.dump(ShuJu, WenJian, ensure_ascii=False, indent=2)
+            WenJian.write("\n")
+    except OSError as CuoWu:
+        print(f"[系统通知] 无法保存已应用替换表: {CuoWu}")
+
+
+def ShanChu_XiTong_TongZhi_ZhuangTai():
+    LuJing = HuoQu_XiTong_TongZhi_ZhuangTai_LuJing()
+    if os.path.isfile(LuJing):
+        try:
+            os.remove(LuJing)
+        except OSError as CuoWu:
+            print(f"[系统通知] 无法删除已应用替换表: {CuoWu}")
+
+
+def _YingYong_TiHuan_Biao(NeiRong, Biao, FanXiang=False):
     CiShu = 0
-    for YingWen, ZhongWen in DuQu_XiTong_TongZhi_TiHuan():
+    for YingWen, ZhongWen in Biao or []:
         Yuan, MuBiao = (ZhongWen, YingWen) if FanXiang else (YingWen, ZhongWen)
-        if Yuan not in NeiRong:
+        if not Yuan or Yuan not in NeiRong:
             continue
         NeiRong = NeiRong.replace(Yuan, MuBiao)
         CiShu += 1
     return NeiRong, CiShu
 
 
+def _YingYong_XiTong_TongZhi_GengXin(NeiRong, XinBiao, JiuBiao=None):
+    """先把上次中文换成当前中文，再补英文模板。"""
+    CiShu = 0
+    XinYingShe = {YingWen: ZhongWen for YingWen, ZhongWen in (XinBiao or [])}
+    for YingWen, JiuZhong in (JiuBiao or []):
+        if not JiuZhong or JiuZhong not in NeiRong:
+            continue
+        XinZhong = XinYingShe.get(YingWen)
+        if XinZhong and XinZhong != JiuZhong:
+            NeiRong = NeiRong.replace(JiuZhong, XinZhong)
+            CiShu += 1
+        elif not XinZhong:
+            NeiRong = NeiRong.replace(JiuZhong, YingWen)
+            CiShu += 1
+    NeiRong, XinCi = _YingYong_TiHuan_Biao(NeiRong, XinBiao, FanXiang=False)
+    return NeiRong, CiShu + XinCi
+
+
+def _WenJian_Han_TongZhi_ZhongWen(NeiRong, Biao):
+    return any(ZhongWen and ZhongWen in NeiRong for _YingWen, ZhongWen in (Biao or []))
+
+
 def ZhuRu_XiTong_TongZhi_HanHua():
     """替换工作台脚本中的系统通知固定文案。"""
+    XinBiao = DuQu_XiTong_TongZhi_TiHuan()
+    ZhuangTai = DuQu_XiTong_TongZhi_ZhuangTai()
+    JiuBiao = (ZhuangTai or {}).get("applied") or []
     ZongCi = 0
+    WenJianXinXi = []
     for LuJing in HuoQu_XiTong_TongZhi_JS_LieBiao():
         if not os.path.isfile(LuJing):
             print(f"[系统通知] 未找到脚本，跳过: {LuJing}")
@@ -879,29 +989,47 @@ def ZhuRu_XiTong_TongZhi_HanHua():
         except OSError as CuoWu:
             print(f"[系统通知] 无法读取 {os.path.basename(LuJing)}: {CuoWu}")
             continue
-        XinWenBen, CiShu = _YingYong_XiTong_TongZhi_TiHuan(NeiRong, FanXiang=False)
+        XinWenBen, CiShu = _YingYong_XiTong_TongZhi_GengXin(NeiRong, XinBiao, JiuBiao)
         if CiShu == 0:
-            if "智能体已完成" in NeiRong or "完成 • ${s}" in NeiRong:
+            if _WenJian_Han_TongZhi_ZhongWen(NeiRong, XinBiao) or _WenJian_Han_TongZhi_ZhongWen(NeiRong, JiuBiao):
                 print(f"[系统通知] {os.path.basename(LuJing)} 已是中文，跳过")
             else:
                 print(f"[系统通知] {os.path.basename(LuJing)} 未匹配到通知模板，跳过")
-            continue
+        else:
+            try:
+                XieRu_WenBen_BaoLiu_HuanHang(LuJing, XinWenBen, HuanHang)
+            except PermissionError:
+                print(f"[错误] 无法写入 {os.path.basename(LuJing)}：权限不足")
+                TiShi_JiaoYan_QuanXian_BuZu(LuJing)
+                return False
+            except OSError as CuoWu:
+                print(f"[错误] 无法写入 {os.path.basename(LuJing)}: {CuoWu}")
+                return False
+            ZongCi += CiShu
+            print(f"[系统通知] {os.path.basename(LuJing)} 已替换 {CiShu} 处")
         try:
-            XieRu_WenBen_BaoLiu_HuanHang(LuJing, XinWenBen, HuanHang)
-        except PermissionError:
-            print(f"[错误] 无法写入 {os.path.basename(LuJing)}：权限不足")
-            TiShi_JiaoYan_QuanXian_BuZu(LuJing)
-            return False
-        except OSError as CuoWu:
-            print(f"[错误] 无法写入 {os.path.basename(LuJing)}: {CuoWu}")
-            return False
-        ZongCi += CiShu
-        print(f"[系统通知] {os.path.basename(LuJing)} 已替换 {CiShu} 处")
+            WenJianXinXi.append({
+                "name": os.path.basename(LuJing),
+                "sha256": JiSuan_WenJian_Sha256(LuJing),
+            })
+        except OSError:
+            pass
+    if XinBiao:
+        XieRu_XiTong_TongZhi_ZhuangTai(XinBiao, WenJianXinXi)
     return ZongCi > 0
 
 
 def HuiFu_XiTong_TongZhi_HanHua():
-    """把系统通知中文模板还原为英文。"""
+    """按本机已应用的替换表把通知模板还原为英文。"""
+    ZhuangTai = DuQu_XiTong_TongZhi_ZhuangTai()
+    Biao = (ZhuangTai or {}).get("applied") or DuQu_XiTong_TongZhi_TiHuan()
+    ChanPin = HuoQu_Cursor_ChanPin_XinXi()
+    if ZhuangTai and (
+        (ZhuangTai.get("commit") and ZhuangTai.get("commit") != ChanPin.get("commit"))
+        or (ZhuangTai.get("cursorVersion") and ZhuangTai.get("cursorVersion") != ChanPin.get("version"))
+    ):
+        print("[系统通知] 已应用表与当前 Cursor 版本不一致，仍按该表尝试还原")
+    ChengGong = True
     for LuJing in HuoQu_XiTong_TongZhi_JS_LieBiao():
         if not os.path.isfile(LuJing):
             continue
@@ -909,17 +1037,24 @@ def HuiFu_XiTong_TongZhi_HanHua():
             NeiRong, HuanHang = DuQu_WenBen_BaoLiu_HuanHang(LuJing)
         except OSError as CuoWu:
             print(f"[系统通知] 无法读取 {os.path.basename(LuJing)}: {CuoWu}")
+            ChengGong = False
             continue
-        XinWenBen, CiShu = _YingYong_XiTong_TongZhi_TiHuan(NeiRong, FanXiang=True)
-        if CiShu == 0:
-            continue
-        try:
-            XieRu_WenBen_BaoLiu_HuanHang(LuJing, XinWenBen, HuanHang)
-        except OSError as CuoWu:
-            print(f"[系统通知] 无法还原 {os.path.basename(LuJing)}: {CuoWu}")
-            continue
-        print(f"[系统通知] 已还原 {os.path.basename(LuJing)} 的 {CiShu} 处")
-    return True
+        XinWenBen, CiShu = _YingYong_TiHuan_Biao(NeiRong, Biao, FanXiang=True)
+        if CiShu > 0:
+            try:
+                XieRu_WenBen_BaoLiu_HuanHang(LuJing, XinWenBen, HuanHang)
+            except OSError as CuoWu:
+                print(f"[系统通知] 无法还原 {os.path.basename(LuJing)}: {CuoWu}")
+                ChengGong = False
+                continue
+            print(f"[系统通知] 已还原 {os.path.basename(LuJing)} 的 {CiShu} 处")
+            NeiRong = XinWenBen
+        if _WenJian_Han_TongZhi_ZhongWen(NeiRong, Biao):
+            print(f"[系统通知] {os.path.basename(LuJing)} 仍有未还原的通知译文")
+            ChengGong = False
+    if ChengGong:
+        ShanChu_XiTong_TongZhi_ZhuangTai()
+    return ChengGong
 
 
 # ============================================================
@@ -1691,9 +1826,11 @@ def HuiFu_YuanShi():
         print(f"[恢复] 已手动移除注入内容")
 
     HuiFu_TuoPan_HanHua()
-    HuiFu_XiTong_TongZhi_HanHua()
-
-    HuiFu_JiaoYan_Zhi()
+    if HuiFu_XiTong_TongZhi_HanHua():
+        HuiFu_JiaoYan_Zhi()
+    else:
+        print("[系统通知] 工作台脚本未能按已应用表还原，改按当前文件重算校验值")
+        GengXin_JiaoYan_Zhi()
 
     ShanChu_SuoYou_ZhuRu_JS()
 
