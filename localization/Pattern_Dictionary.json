@@ -688,6 +688,26 @@
       "replacement": "已运行 $1 小时 $2 分 $3 秒"
     },
     {
+      "regex": "^Waiting for (.+) to reconnect$",
+      "flags": "",
+      "replacement": "正在等待 $1 重新连接"
+    },
+    {
+      "regex": "^(\\d+) background terminals?$",
+      "flags": "",
+      "replacement": "$1 个后台终端"
+    },
+    {
+      "regex": "^(\\d+) background subagents?$",
+      "flags": "",
+      "replacement": "$1 个后台子智能体"
+    },
+    {
+      "regex": "^(\\d+) background tasks?$",
+      "flags": "",
+      "replacement": "$1 个后台任务"
+    },
+    {
       "regex": "^Thought (\\d+(?:\\.\\d+)?)s\\s*[>\\u203a\\u276f\\u25b8\\u25b6]*$",
       "flags": "",
       "replacement": "已思考 $1 秒"
@@ -716,6 +736,26 @@
       "regex": "^Thought briefly\\s*[>\\u203a\\u276f\\u25b8\\u25b6]*$",
       "flags": "i",
       "replacement": "已思考片刻"
+    },
+    {
+      "regex": "^已思考\\s+briefly\\s*[>\\u203a\\u276f\\u25b8\\u25b6]*$",
+      "flags": "i",
+      "replacement": "已思考片刻"
+    },
+    {
+      "regex": "^已思考\\s+(\\d+(?:\\.\\d+)?)s\\s*[>\\u203a\\u276f\\u25b8\\u25b6]*$",
+      "flags": "",
+      "replacement": "已思考 $1 秒"
+    },
+    {
+      "regex": "^Waited briefly\\s*[>\\u203a\\u276f\\u25b8\\u25b6]*$",
+      "flags": "i",
+      "replacement": "已等待片刻"
+    },
+    {
+      "regex": "^Waited (\\d+(?:\\.\\d+)?)s$",
+      "flags": "i",
+      "replacement": "已等待 $1 秒"
     },
     {
       "regex": "^Grepping (.+) in (\\S+)$",
@@ -791,6 +831,46 @@
       "regex": "^explored (\\d+) files?, (\\d+) searches$",
       "flags": "",
       "replacement": "已探索 $1 个文件，$2 次搜索"
+    },
+    {
+      "regex": "^Exploring (\\d+) files?$",
+      "flags": "i",
+      "replacement": "正在探索 $1 个文件"
+    },
+    {
+      "regex": "^Explored (\\d+) files?$",
+      "flags": "i",
+      "replacement": "已探索 $1 个文件"
+    },
+    {
+      "regex": "^explored (\\d+) director(?:y|ies)$",
+      "flags": "i",
+      "replacement": "已探索 $1 个目录"
+    },
+    {
+      "regex": "^explored (\\d+) search(?:es)?$",
+      "flags": "i",
+      "replacement": "已探索 $1 次搜索"
+    },
+    {
+      "regex": "^explored (\\d+) fetch(?:es)?$",
+      "flags": "i",
+      "replacement": "已探索 $1 次抓取"
+    },
+    {
+      "regex": "^explored (\\d+) tools?$",
+      "flags": "i",
+      "replacement": "已探索 $1 个工具"
+    },
+    {
+      "regex": "^explored (\\d+) browser actions?$",
+      "flags": "i",
+      "replacement": "已探索 $1 次浏览器操作"
+    },
+    {
+      "regex": "^explored lints$",
+      "flags": "i",
+      "replacement": "已探索代码检查"
     },
     {
       "regex": "^(\\d+) files?, (\\d+) searches$",

@@ -5805,6 +5805,46 @@
           "附加截图"
         ],
         [
+          "Which response is better?",
+          "哪一个回复更好？"
+        ],
+        [
+          "Response A",
+          "回复 A"
+        ],
+        [
+          "Response B",
+          "回复 B"
+        ],
+        [
+          "View Response A",
+          "查看回复 A"
+        ],
+        [
+          "View Response B",
+          "查看回复 B"
+        ],
+        [
+          "Response comparison",
+          "回复比较"
+        ],
+        [
+          "Response comparison carousel",
+          "回复比较轮播"
+        ],
+        [
+          "Responses ready",
+          "回复已就绪"
+        ],
+        [
+          "Generating responses",
+          "正在生成回复"
+        ],
+        [
+          "The alternate response is not billed",
+          "备选回复不计入用量"
+        ],
+        [
           "Response A is Better",
           "回复 A 更好"
         ],
@@ -6311,10 +6351,6 @@
         [
           "Embeddings and metadata are stored in the",
           "嵌入向量和元数据存储在"
-        ],
-        [
-          "cloud",
-          "云端"
         ],
         [
           ", but all code is stored locally.",
@@ -13749,6 +13785,62 @@
           "正在查看附件视频"
         ],
         [
+          "Taking longer than expected…",
+          "耗时比预期更长…"
+        ],
+        [
+          "Taking longer than expected...",
+          "耗时比预期更长…"
+        ],
+        [
+          "Starting environment setup",
+          "正在启动环境设置"
+        ],
+        [
+          "Warming up…",
+          "正在预热…"
+        ],
+        [
+          "Warming up...",
+          "正在预热…"
+        ],
+        [
+          "Preparing…",
+          "正在准备…"
+        ],
+        [
+          "Preparing...",
+          "正在准备…"
+        ],
+        [
+          "Reconnecting...",
+          "正在重新连接..."
+        ],
+        [
+          "Updating canvas…",
+          "正在更新画布…"
+        ],
+        [
+          "Updating canvas...",
+          "正在更新画布…"
+        ],
+        [
+          "Updating visualization…",
+          "正在更新可视化…"
+        ],
+        [
+          "Updating visualization...",
+          "正在更新可视化…"
+        ],
+        [
+          "We'll send this in",
+          "将在稍后发送"
+        ],
+        [
+          "Waiting for the self-hosted worker to reconnect",
+          "正在等待自托管工作节点重新连接"
+        ],
+        [
           "Exploring",
           "正在探索"
         ],
@@ -13775,6 +13867,18 @@
         [
           "Thought",
           "已思考"
+        ],
+        [
+          "Thought briefly",
+          "已思考片刻"
+        ],
+        [
+          "Waited",
+          "已等待"
+        ],
+        [
+          "Waited briefly",
+          "已等待片刻"
         ],
         [
           "Grepping",

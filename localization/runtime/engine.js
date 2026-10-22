@@ -5,7 +5,7 @@
     // __PARTIAL_FRAGMENTS_BLOCK__
 
     // 这些区域内的文本不翻译，避免改到编辑器正文、资源管理器和代码块
-    var TiaoGuo_XuanZeQi = '.monaco-editor, .monaco-diff-editor, .monaco-component, .overflow-guard, .view-lines, .view-line, .editor-scrollable, .inputarea, .rename-input, .sticky-widget, .minimap, .ui-code-block, .cm-editor, .cm-content, pre, code, .code-view, .code-line, .code-content, .code-preview-container, .simple-code-render, .monaco-tokenized-source, .canvas-tab-source-editor, .composer-message-codeblock, .appearance-preview-editor-code, .diff-moved-code-block, .diff-line, .diff-line-content, .diff-lines, .inline-diff-content, .diff-review, .diff-review-row, .explorer-viewlet, [id="workbench.view.explorer"]';
+    var TiaoGuo_XuanZeQi = '.monaco-editor, .monaco-diff-editor, .monaco-component, .overflow-guard, .view-lines, .view-line, .editor-scrollable, .inputarea, .rename-input, .sticky-widget, .minimap, .ui-code-block, .cm-editor, .cm-content, pre, code, .code-view, .code-line, .code-content, .code-preview-container, .simple-code-render, .monaco-tokenized-source, .canvas-tab-source-editor, .composer-message-codeblock, .appearance-preview-editor-code, .diff-moved-code-block, .diff-line, .diff-line-content, .diff-lines, .inline-diff-content, .diff-review, .diff-review-row, [class*="ui-default-diff"], [class*="ui-default-code"], [data-component="embedded-file-viewer"], [data-streamdown="code-block-body"], .explorer-viewlet, [id="workbench.view.explorer"]';
     // 这些标签本身不遍历翻译
     var TiaoGuo_BiaoQian = new Set(['TEXTAREA', 'INPUT', 'SCRIPT', 'STYLE', 'CODE', 'PRE', 'NOSCRIPT']);
 
@@ -937,12 +937,65 @@
         return sib ? (sib.textContent || '').trim() : '';
     }
 
+    // 判断是否是思考标签（含已译）
+    function Shi_SiKao_BiaoQian_Wen(text) {
+        return text === 'Thought' || text === '已思考' || text === 'Thinking' || text === '思考' || text === '思考中' ||
+            /^已思考/.test(text) || /^思考/.test(text);
+    }
+
+    // 向前多看几层，跳过箭头，找到 Thought / 已思考
+    function Zhao_SiKao_BiaoQian(node) {
+        var texts = [];
+        function ShouJi(start) {
+            var sib = start;
+            for (var i = 0; sib && i < 8; i++) {
+                var t = (sib.textContent || '').trim();
+                if (t && !/^[>\u203a\u276f\u25b8\u25b6]+$/.test(t)) texts.push(t);
+                sib = sib.previousSibling;
+            }
+        }
+        ShouJi(node.previousSibling);
+        var p = node.parentElement;
+        for (var hop = 0; p && hop < 5; hop++) {
+            ShouJi(p.previousSibling);
+            var cls = p.className ? String(p.className) : '';
+            if (cls.indexOf('thinking') >= 0) texts.push('已思考');
+            p = p.parentElement;
+        }
+        for (var j = 0; j < texts.length; j++) {
+            if (Shi_SiKao_BiaoQian_Wen(texts[j])) return texts[j];
+        }
+        return '';
+    }
+
+    // 整句残留：已思考 briefly / Thought 1s
+    function FanYi_SiKao_ZhengJu(trimmed) {
+        if (!trimmed) return null;
+        var t = trimmed.replace(/[>\u203a\u276f\u25b8\u25b6]+$/, '').trim();
+        if (/^(?:Thought|已思考)\s+briefly$/i.test(t)) return '已思考片刻';
+        if (/^Waited\s+briefly$/i.test(t)) return '已等待片刻';
+        var m = /^(?:Thought|已思考)\s+(\d+(?:\.\d+)?)s$/i.exec(t);
+        if (m) return '已思考 ' + m[1] + ' 秒';
+        m = /^(?:Thought|已思考)\s+(\d+)m (\d+)s$/i.exec(t);
+        if (m) return '已思考 ' + m[1] + ' 分 ' + m[2] + ' 秒';
+        m = /^(?:Thought|已思考)\s+(\d+)m$/i.exec(t);
+        if (m) return '已思考 ' + m[1] + ' 分钟';
+        m = /^(?:Thought|已思考)\s+(\d+)h (\d+)m(?: (\d+)s)?$/i.exec(t);
+        if (m) return m[3] ? ('已思考 ' + m[1] + ' 小时 ' + m[2] + ' 分 ' + m[3] + ' 秒') : ('已思考 ' + m[1] + ' 小时 ' + m[2] + ' 分');
+        m = /^(?:Thought|已思考)\s+(\d+)h$/i.exec(t);
+        if (m) return '已思考 ' + m[1] + ' 小时';
+        return null;
+    }
+
     // 把 Thought 旁边的思考时长译成中文
     function FanYi_SiKao_ShiChang(node, trimmed) {
-        if (!/^(?:briefly|\d+(?:\.\d+)?s|\d+m(?: \d+s)?|\d+h(?: \d+m(?: \d+s)?)?)$/.test(trimmed)) return null;
-        var label = DuQu_XiangLin_WenBen(node, 'prev');
-        if (label !== 'Thought' && label !== '已思考') return null;
-        if (trimmed === 'briefly') return '片刻';
+        var zhengJu = FanYi_SiKao_ZhengJu(trimmed);
+        if (zhengJu) return zhengJu;
+        var duration = trimmed.replace(/[>\u203a\u276f\u25b8\u25b6]+$/, '').trim();
+        if (!/^(?:briefly|\d+(?:\.\d+)?s|\d+m(?: \d+s)?|\d+h(?: \d+m(?: \d+s)?)?)$/.test(duration)) return null;
+        if (!Zhao_SiKao_BiaoQian(node)) return null;
+        if (duration === 'briefly') return '片刻';
+        trimmed = duration;
         var m = /^(\d+(?:\.\d+)?)s$/.exec(trimmed);
         if (m) return m[1] + ' 秒';
         m = /^(\d+)m (\d+)s$/.exec(trimmed);
@@ -977,7 +1030,21 @@
     var ZhiNengTi_ZhuangTai_JingQue = [
         'Planning next moves',
         'Wrapping up',
-        'Reviewing attached video'
+        'Reviewing attached video',
+        'Taking longer than expected…',
+        'Taking longer than expected...',
+        'Starting environment setup',
+        'Warming up…',
+        'Warming up...',
+        'Preparing…',
+        'Preparing...',
+        'Reconnecting...',
+        'Updating canvas…',
+        'Updating canvas...',
+        'Updating visualization…',
+        'Updating visualization...',
+        "We'll send this in",
+        'Waiting for the self-hosted worker to reconnect'
     ];
     // 工具行开头的动作词。Reading 必须排在 Read 前面
     var ZhiNengTi_ZhuangTai_DongCi = [
@@ -1001,7 +1068,13 @@
             if (trimmed === ZhiNengTi_ZhuangTai_JingQue[i]) return true;
         }
         return /^Thought\s+\S/.test(trimmed) ||
-            /^Worked for /.test(trimmed) ||
+            /^(?:已思考\s+)?briefly$/i.test(trimmed) ||
+            /^已思考\s+\S/.test(trimmed) ||
+            /^Waited\b/i.test(trimmed) ||
+            /^Worked for\s/.test(trimmed) ||
+            /^explored /i.test(trimmed) ||
+            /^Waiting for .+ to reconnect$/.test(trimmed) ||
+            /^\d+ background (?:terminal|subagent|task)s?$/.test(trimmed) ||
             ZhiNengTi_ZhuangTai_DongCi_ZhengZe.test(trimmed) ||
             ZhiNengTi_ZhuangTai_GuoQu_ZhengZe.test(trimmed) ||
             ZhiNengTi_ZhuangTai_ShuLiang_ZhengZe.test(trimmed);
@@ -1012,14 +1085,16 @@
         if (!node || node.nodeType !== 3) return;
         try {
             if (node.parentElement && (
-                YingGai_TiaoGuo_BianJiQi_YuanSu(node.parentElement) ||
                 Shi_YongHu_ShuRu_QuYu(node.parentElement) ||
-                Shi_HuiFu_ZhengWen(node.parentElement)
+                Shi_HuiFu_ZhengWen(node.parentElement) ||
+                Shi_WenJianShu_MingCheng(node.parentElement) ||
+                Shi_Zai_DaiMa_Hang(node)
             )) return;
         } catch (e) {}
         var trimmed = (node.textContent || '').trim();
         if (!trimmed || trimmed.length > 80) return;
         if (!Shi_ZhiNengTi_ZhuangTai_WenBen(trimmed) &&
+            !FanYi_SiKao_ZhengJu(trimmed) &&
             !FanYi_SiKao_BiaoQian(node, trimmed) &&
             !FanYi_SiKao_ShiChang(node, trimmed)) return;
         FanYi_WenBen_JieDian(node);
@@ -1049,6 +1124,7 @@
             var trimmed = (node.textContent || '').trim();
             if (!trimmed || trimmed.length > 80) continue;
             if (Shi_ZhiNengTi_ZhuangTai_WenBen(trimmed) ||
+                FanYi_SiKao_ZhengJu(trimmed) ||
                 FanYi_SiKao_BiaoQian(node, trimmed) ||
                 FanYi_SiKao_ShiChang(node, trimmed)) {
                 FanYi_ZhuangTai_WenBen_JieDian(node);
@@ -1090,7 +1166,10 @@
         if (Shi_Zai_DaiMa_Hang(node)) return;
         if (Shi_KongZhuangTai_TiShi(node)) return;
         try {
-            if (node.parentElement && Shi_HuiFu_ZhengWen(node.parentElement)) return;
+            if (node.parentElement && (
+                Shi_HuiFu_ZhengWen(node.parentElement) ||
+                Shi_WenJianShu_MingCheng(node.parentElement)
+            )) return;
         } catch (e) {}
         var text = node.textContent;
         if (!text) return;
@@ -1132,10 +1211,9 @@
         }
 
         var slashTip = FanYi_XieGang_TiShi(node);
-        var result = slashTip || ChaZhao_FanYi(text);
+        var result = FanYi_SiKao_ZhengJu(trimmed) || FanYi_SiKao_BiaoQian(node, trimmed) || FanYi_SiKao_ShiChang(node, trimmed);
+        if (!result) result = slashTip || ChaZhao_FanYi(text);
         if (!result) result = FanYi_TiJiao_PingFen_WenBen(text) || FanYi_TiJiao_PingFen_WenBen(trimmed);
-        if (!result) result = FanYi_SiKao_BiaoQian(node, trimmed);
-        if (!result) result = FanYi_SiKao_ShiChang(node, trimmed);
         if (result) {
             var prefix = text.substring(0, text.indexOf(trimmed));
             var suffix = text.substring(text.indexOf(trimmed) + trimmed.length);
@@ -1181,6 +1259,7 @@
     // 翻译元素上的提示、占位和替代文本属性
     function FanYi_ShuXing(el) {
         if (!el || !el.getAttribute) return;
+        try { if (Shi_WenJianShu_MingCheng(el)) return; } catch (e) {}
         var attrs = ['title', 'aria-label', 'alt', 'placeholder', 'aria-placeholder', 'data-tooltip', 'data-title'];
         for (var i = 0; i < attrs.length; i++) {
             var val = el.getAttribute(attrs[i]);
@@ -1469,7 +1548,9 @@
             if (el.closest(
                 '.monaco-editor .view-lines, .monaco-editor .view-line, .view-overlays, ' +
                 '.margin-view-overlays, .inputarea, .monaco-mouse-cursor-text, ' +
-                '.ProseMirror, .tiptap, .ui-prompt-input-editor'
+                '.ProseMirror, .tiptap, .ui-prompt-input-editor, ' +
+                '[class*="ui-default-diff"], [class*="ui-default-code"], ' +
+                '[data-component="embedded-file-viewer"], [data-streamdown="code-block-body"]'
             )) return true;
         } catch (e) {}
         return false;
@@ -1480,6 +1561,23 @@
         if (!el || !el.closest) return false;
         try {
             return !!(el.closest('.ui-markdown, [class*="ui-markdown"]'));
+        } catch (e) { return false; }
+    }
+
+    // 判断元素是否是文件树/资源列表里的文件名或文件夹名。行内按钮仍可翻译
+    function Shi_WenJianShu_MingCheng(el) {
+        if (!el || !el.closest) return false;
+        try {
+            if (el.closest(
+                'button, [role="button"], [role="menuitem"], ' +
+                '.monaco-action-bar, .actions, .action-item, .codicon'
+            )) return false;
+            return !!(el.closest(
+                '[data-file-tree-entry], [data-file-tree-row], [data-tree-directory], ' +
+                '.monaco-icon-name-container, .explorer-item, ' +
+                '.monaco-breadcrumbs-item, ' +
+                '.tabs-container .tab .label-name, .tabs-container .monaco-icon-label'
+            ));
         } catch (e) { return false; }
     }
 
@@ -1559,8 +1657,17 @@
                     cls.indexOf('code-content') !== -1 ||
                     cls.indexOf('composer-message-codeblock') !== -1 ||
                     cls.indexOf('simple-code-render') !== -1 ||
+                    cls.indexOf('ui-default-diff') !== -1 ||
+                    cls.indexOf('ui-default-code') !== -1 ||
+                    cls.indexOf('embedded-file-viewer') !== -1 ||
                     /(?:^|\s)mtk\d*(?:\s|$)/.test(cls)
                 )) return true;
+                try {
+                    if (el.getAttribute && (
+                        el.getAttribute('data-component') === 'embedded-file-viewer' ||
+                        el.getAttribute('data-streamdown') === 'code-block-body'
+                    )) return true;
+                } catch (e2) {}
             }
             if (el.parentElement) {
                 el = el.parentElement;
@@ -1581,7 +1688,10 @@
         if (!node || node.nodeType !== 3 || text == null) return false;
         if (Shi_Zai_DaiMa_Hang(node)) return false;
         try {
-            if (node.parentElement && Shi_HuiFu_ZhengWen(node.parentElement)) return false;
+            if (node.parentElement && (
+                Shi_HuiFu_ZhengWen(node.parentElement) ||
+                Shi_WenJianShu_MingCheng(node.parentElement)
+            )) return false;
         } catch (e) {}
         if (node.nodeValue !== text) node.nodeValue = text;
         return true;
@@ -2155,7 +2265,8 @@
             if (kuaiEl && kuaiEl.className && typeof kuaiEl.className === 'string') {
                 var kuaiMing = kuaiEl.className;
                 if (kuaiMing.indexOf('view-line') >= 0 || kuaiMing.indexOf('view-overlay') >= 0 ||
-                    kuaiMing.indexOf('mtk') >= 0 || kuaiMing.indexOf('ProseMirror') >= 0) continue;
+                    kuaiMing.indexOf('mtk') >= 0 || kuaiMing.indexOf('ProseMirror') >= 0 ||
+                    kuaiMing.indexOf('ui-default-diff') >= 0 || kuaiMing.indexOf('ui-default-code') >= 0) continue;
             }
             if (Shi_ShuRu_Huo_DaiMa_BianYi(m.target)) continue;
             if (m.type === 'childList') {
@@ -2302,7 +2413,7 @@
         if (el.nodeType === 3) return XieRu_WenBen_JieDian(el, text);
         if (el.nodeType !== 1) return false;
         if (Shi_Zai_DaiMa_Hang(el)) return false;
-        try { if (Shi_HuiFu_ZhengWen(el)) return false; } catch (e) {}
+        try { if (Shi_HuiFu_ZhengWen(el) || Shi_WenJianShu_MingCheng(el)) return false; } catch (e) {}
         var child = el.firstChild;
         var target = null;
         var youYuanSuWen = false;
@@ -2331,8 +2442,7 @@
         var trimmed = raw.trim();
         var idx = raw.indexOf(trimmed);
         var next = idx < 0 ? text : raw.substring(0, idx) + text + raw.substring(idx + trimmed.length);
-        if (target.nodeValue !== next) target.nodeValue = next;
-        return true;
+        return XieRu_WenBen_JieDian(target, next);
     }
 
     // 在确认不会破坏结构后，安全改写元素文本
@@ -2340,7 +2450,7 @@
         if (!el || !text) return false;
         if (text.length > 400) return false;
         if (Shi_YongHu_ShuRu_QuYu(el)) return false;
-        try { if (Shi_HuiFu_ZhengWen(el)) return false; } catch (e) {}
+        try { if (Shi_HuiFu_ZhengWen(el) || Shi_WenJianShu_MingCheng(el)) return false; } catch (e) {}
         if (YingGai_TiaoGuo_BianJiQi_YuanSu(el)) return false;
         try {
             if (el.querySelector('input, textarea, select, button, [role="button"], [role="switch"], [contenteditable="true"]')) return false;

@@ -26,6 +26,7 @@
         if (!el || (typeof TiaoGuo_XuanZeQi === 'string' && el.closest(TiaoGuo_XuanZeQi))) return;
         if (typeof Shi_KongZhuangTai_TiShi === 'function' && Shi_KongZhuangTai_TiShi(el)) return;
         if (typeof Shi_HuiFu_ZhengWen === 'function' && Shi_HuiFu_ZhengWen(el)) return;
+        if (typeof Shi_WenJianShu_MingCheng === 'function' && Shi_WenJianShu_MingCheng(el)) return;
         if (typeof Shi_BianJiQi_QuYu === 'function' && Shi_BianJiQi_QuYu(el)) return;
         if (typeof Shi_YongHu_ShuRu_QuYu === 'function' && Shi_YongHu_ShuRu_QuYu(el)) return;
         opts = opts || {};
@@ -114,6 +115,7 @@
             if (!el) continue;
             if (el.closest('.monaco-editor .view-lines')) continue;
             if (typeof Shi_HuiFu_ZhengWen === 'function' && Shi_HuiFu_ZhengWen(el)) continue;
+            if (typeof Shi_WenJianShu_MingCheng === 'function' && Shi_WenJianShu_MingCheng(el)) continue;
             if (typeof Shi_YongHu_ShuRu_QuYu === 'function' && Shi_YongHu_ShuRu_QuYu(el)) continue;
             if (opts.skipEditor && el.closest('.monaco-editor')) continue;
             FanYi_ShuXing(el);
@@ -384,7 +386,7 @@
         if (typeof Shi_YongHu_ShuRu_QuYu === 'function' && Shi_YongHu_ShuRu_QuYu(el)) return true;
         try {
             if (typeof TiaoGuo_XuanZeQi === 'string' && el.closest(TiaoGuo_XuanZeQi)) return true;
-            if (el.closest('.monaco-editor, .monaco-diff-editor, .monaco-component, .ui-code-block, .cm-editor, .cm-content, pre, code, .view-line, .sticky-widget, .code-view, .code-line, .code-content, .simple-code-render, .monaco-tokenized-source')) return true;
+            if (el.closest('.monaco-editor, .monaco-diff-editor, .monaco-component, .ui-code-block, .cm-editor, .cm-content, pre, code, .view-line, .sticky-widget, .code-view, .code-line, .code-content, .simple-code-render, .monaco-tokenized-source, [class*="ui-default-diff"], [class*="ui-default-code"], [data-component="embedded-file-viewer"], [data-streamdown="code-block-body"]')) return true;
             if (el.closest('webview')) return true;
             if (el.closest('.menubar, [role="menubar"], .menubar-menu-title, .menubar-menu-button')) return true;
             if (el.matches && el.matches(
