@@ -485,6 +485,58 @@
           "设置固定金额或设为无限制。"
         ],
         [
+          "Set a fixed amount or make on-demand usage unlimited",
+          "设置固定金额，或将按需用量设为无限制"
+        ],
+        [
+          "Usage past your limit is billed later as on-demand.",
+          "超出限额的用量将按需稍后计费。"
+        ],
+        [
+          "Usage past your limit is billed as on-demand.",
+          "超出限额的用量按需计费。"
+        ],
+        [
+          "Requests stop at this limit. Overage from requests already running isn't billed unless the limit is raised this billing cycle.",
+          "请求会在此限额处停止。已在运行的请求产生的超额用量不会计费，除非在本计费周期内提高限额。"
+        ],
+        [
+          "Adjust your on-demand limit",
+          "调整按需限额"
+        ],
+        [
+          "On-demand usage applies after your included usage is used up. Pay only for what you use.",
+          "包含用量用完后才会产生按需用量，按实际使用付费。"
+        ],
+        [
+          "On-demand limit saved.",
+          "按需限额已保存。"
+        ],
+        [
+          "On-demand monthly limit",
+          "按需每月限额"
+        ],
+        [
+          "Spend limit",
+          "消费限额"
+        ],
+        [
+          "Set New Limit",
+          "设置新限额"
+        ],
+        [
+          "No usage data found for this billing period.",
+          "本计费周期没有用量数据。"
+        ],
+        [
+          "Review enabled on-demand usage and spending",
+          "查看已启用的按需用量和消费"
+        ],
+        [
+          "Review whether on-demand spending is enabled",
+          "查看是否已启用按需消费"
+        ],
+        [
           "Fixed",
           "固定"
         ],
