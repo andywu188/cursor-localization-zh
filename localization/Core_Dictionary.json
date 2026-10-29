@@ -385,6 +385,162 @@
           "会在额度之前使用。"
         ],
         [
+          " Used before your credits.",
+          " 会在额度之前使用。"
+        ],
+        [
+          "Credits",
+          "额度"
+        ],
+        [
+          "Additional usage credits",
+          "额外用量额度"
+        ],
+        [
+          "Extra usage credits",
+          "额外用量额度"
+        ],
+        [
+          "Buy credits",
+          "购买额度"
+        ],
+        [
+          "Buy Credits",
+          "购买额度"
+        ],
+        [
+          "Purchase Credits",
+          "购买额度"
+        ],
+        [
+          "Set auto top-up",
+          "设置自动充值"
+        ],
+        [
+          "Set Auto Top-Up",
+          "设置自动充值"
+        ],
+        [
+          "Auto top-up",
+          "自动充值"
+        ],
+        [
+          "Edit auto top-up",
+          "编辑自动充值"
+        ],
+        [
+          "Auto top-up when balance is low",
+          "余额不足时自动充值"
+        ],
+        [
+          "Monthly additional usage",
+          "每月额外用量"
+        ],
+        [
+          "Monthly additional usage limit",
+          "每月额外用量限额"
+        ],
+        [
+          "Edit monthly additional usage limit",
+          "编辑每月额外用量限额"
+        ],
+        [
+          "Monthly additional usage limit reached. Increase your limit to continue working.",
+          "已达每月额外用量限额。请提高限额以继续使用。"
+        ],
+        [
+          "Credits expire after two years",
+          "额度两年后过期"
+        ],
+        [
+          "Not set",
+          "未设置"
+        ],
+        [
+          "Premium",
+          "高级版"
+        ],
+        [
+          "Get Super",
+          "获取 Super"
+        ],
+        [
+          "Get more usage with Super",
+          "使用 Super 获取更多用量"
+        ],
+        [
+          "Get more usage to continue",
+          "获取更多用量以继续"
+        ],
+        [
+          "Get more usage to switch models",
+          "获取更多用量以切换模型"
+        ],
+        [
+          "You can also manage Privacy Mode in the",
+          "您也可以在以下位置管理隐私模式："
+        ],
+        [
+          "Unify dashboard",
+          "Unify 控制台"
+        ],
+        [
+          "Buy credits unavailable",
+          "无法购买额度"
+        ],
+        [
+          "Credits can't be purchased here right now. You can add credits from the billing settings instead.",
+          "目前无法在此处购买额度。请改从账单设置中添加额度。"
+        ],
+        [
+          "Could not load the credit balance",
+          "无法加载额度余额"
+        ],
+        [
+          "Automatic top-ups",
+          "自动充值"
+        ],
+        [
+          "Add credits when your balance is low.",
+          "余额不足时添加额度。"
+        ],
+        [
+          "Top up when balance is below",
+          "余额低于以下金额时充值"
+        ],
+        [
+          "Top up amount",
+          "充值金额"
+        ],
+        [
+          "Credits added",
+          "额度已添加"
+        ],
+        [
+          "Pay the invoice to add credits",
+          "支付账单以添加额度"
+        ],
+        [
+          "Remove limit",
+          "移除限额"
+        ],
+        [
+          "Monthly spend limit",
+          "每月消费限额"
+        ],
+        [
+          "Edit monthly spend limit",
+          "编辑每月消费限额"
+        ],
+        [
+          "A monthly spend limit for your additional usage.",
+          "额外用量的每月消费限额。"
+        ],
+        [
+          "Set a monthly limit for usage credits",
+          "为用量额度设置每月限额"
+        ],
+        [
           "Upgrade",
           "升级"
         ],
@@ -535,6 +691,26 @@
         [
           "Review whether on-demand spending is enabled",
           "查看是否已启用按需消费"
+        ],
+        [
+          "You have an unpaid invoice",
+          "您有未支付的账单"
+        ],
+        [
+          "Pay your unpaid invoice at cursor.com/dashboard/billing to resume requests.",
+          "请前往 cursor.com/dashboard/billing 支付未结账单以恢复请求。"
+        ],
+        [
+          "Pay Invoice",
+          "支付账单"
+        ],
+        [
+          "Unauthorized request.",
+          "未授权的请求。"
+        ],
+        [
+          "Unauthorized request",
+          "未授权的请求"
         ],
         [
           "Fixed",
@@ -9175,6 +9351,62 @@
         [
           "Last Agent Turn",
           "上次智能体回合"
+        ],
+        [
+          "No changes in the last turn",
+          "上一回合没有更改"
+        ],
+        [
+          "No changes in this turn yet",
+          "本回合尚无更改"
+        ],
+        [
+          "Branch Changes",
+          "分支更改"
+        ],
+        [
+          "No uncommitted changes on your local branch",
+          "本地分支没有未提交的更改"
+        ],
+        [
+          "No changes on this cloud agent's branch yet",
+          "此云端智能体分支尚无更改"
+        ],
+        [
+          "All changes have been pushed to the remote branch",
+          "所有更改都已推送到远程分支"
+        ],
+        [
+          "No changes on this branch",
+          "此分支没有更改"
+        ],
+        [
+          "No unstaged changes",
+          "没有未暂存的更改"
+        ],
+        [
+          "No staged changes",
+          "没有已暂存的更改"
+        ],
+        [
+          "No branch changes",
+          "没有分支更改"
+        ],
+        [
+          "No changes in selected commits",
+          "所选提交中没有更改"
+        ],
+        [
+          "Create Draft PR",
+          "创建草稿 PR"
+        ],
+        [
+          "Open Changes Menu",
+          "打开更改菜单"
+        ],
+        [
+          "New PR Options",
+          "新建 PR 选项"
         ],
         [
           "Expand",

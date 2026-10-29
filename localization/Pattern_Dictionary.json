@@ -303,6 +303,56 @@
       "replacement": "已更改 $1 个文件"
     },
     {
+      "regex": "^Weekly usage resets on (.+) \\((\\d+) days? left\\)$",
+      "flags": "i",
+      "replacement": "每周用量将于 $1 重置（剩余 $2 天）"
+    },
+    {
+      "regex": "^Weekly usage resets on (.+) \\((\\d+) hours? and (\\d+) minutes? left\\)$",
+      "flags": "i",
+      "replacement": "每周用量将于 $1 重置（剩余 $2 小时 $3 分钟）"
+    },
+    {
+      "regex": "^Weekly usage resets on (.+) \\((\\d+) hours? left\\)$",
+      "flags": "i",
+      "replacement": "每周用量将于 $1 重置（剩余 $2 小时）"
+    },
+    {
+      "regex": "^Weekly usage resets on (.+) \\((\\d+) minutes? left\\)$",
+      "flags": "i",
+      "replacement": "每周用量将于 $1 重置（剩余 $2 分钟）"
+    },
+    {
+      "regex": "^Weekly usage resets on (.+) \\((.+)\\)$",
+      "flags": "i",
+      "replacement": "每周用量将于 $1 重置（$2）"
+    },
+    {
+      "regex": "^Usage limits reset on (.+) \\((\\d+) days? left\\)$",
+      "flags": "i",
+      "replacement": "用量限额将于 $1 重置（剩余 $2 天）"
+    },
+    {
+      "regex": "^Usage limits reset on (.+) \\((\\d+) hours? and (\\d+) minutes? left\\)$",
+      "flags": "i",
+      "replacement": "用量限额将于 $1 重置（剩余 $2 小时 $3 分钟）"
+    },
+    {
+      "regex": "^Usage limits reset on (.+) \\((\\d+) hours? left\\)$",
+      "flags": "i",
+      "replacement": "用量限额将于 $1 重置（剩余 $2 小时）"
+    },
+    {
+      "regex": "^Usage limits reset on (.+) \\((\\d+) minutes? left\\)$",
+      "flags": "i",
+      "replacement": "用量限额将于 $1 重置（剩余 $2 分钟）"
+    },
+    {
+      "regex": "^Usage limits reset on (.+) \\((.+)\\)$",
+      "flags": "i",
+      "replacement": "用量限额将于 $1 重置（$2）"
+    },
+    {
       "regex": "^Usage limits reset on (.+)$",
       "flags": "i",
       "replacement": "用量限额将于 $1 重置"
@@ -1671,6 +1721,76 @@
       "regex": "^No remote machines match [\"\\u201c](.+)[\"\\u201d]\\.$",
       "flags": "",
       "replacement": "没有匹配「$1」的远程计算机。"
+    },
+    {
+      "regex": "^No changes against (.+)$",
+      "flags": "",
+      "replacement": "相对 $1 没有更改"
+    },
+    {
+      "regex": "^No committed changes against (.+)$",
+      "flags": "",
+      "replacement": "相对 $1 没有已提交的更改"
+    },
+    {
+      "regex": "^Invalid internal service header Request ID: (.+)$",
+      "flags": "",
+      "replacement": "无效的内部服务标头 请求 ID：$1"
+    },
+    {
+      "regex": "^Invalid internal service header\\s*Request ID:\\s*(.+)$",
+      "flags": "i",
+      "replacement": "无效的内部服务标头 请求 ID：$1"
+    },
+    {
+      "regex": "^Spend limit (.+)$",
+      "flags": "",
+      "replacement": "消费限额 $1"
+    },
+    {
+      "regex": "^Included usage with your subscription\\. Resets (.+)\\. Used before your credits\\.$",
+      "flags": "",
+      "replacement": "订阅包含的用量。将于 $1 重置。会在额度之前使用。"
+    },
+    {
+      "regex": "^Included usage with your subscription\\. Resets (.+)\\.$",
+      "flags": "",
+      "replacement": "订阅包含的用量。将于 $1 重置。"
+    },
+    {
+      "regex": "^Resets (.+)\\.$",
+      "flags": "",
+      "replacement": "将于 $1 重置。"
+    },
+    {
+      "regex": "^\\$([\\d,.]+) remaining$",
+      "flags": "",
+      "replacement": "剩余 $$1"
+    },
+    {
+      "regex": "^(\\d+) days? left$",
+      "flags": "",
+      "replacement": "剩余 $1 天"
+    },
+    {
+      "regex": "^(\\d+) hours? and (\\d+) minutes? left$",
+      "flags": "",
+      "replacement": "剩余 $1 小时 $2 分钟"
+    },
+    {
+      "regex": "^(\\d+) hours? left$",
+      "flags": "",
+      "replacement": "剩余 $1 小时"
+    },
+    {
+      "regex": "^(\\d+) minutes? left$",
+      "flags": "",
+      "replacement": "剩余 $1 分钟"
+    },
+    {
+      "regex": "^0 minutes left$",
+      "flags": "",
+      "replacement": "剩余 0 分钟"
     }
   ]
 }
